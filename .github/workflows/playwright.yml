@@ -64,7 +64,7 @@ jobs:
 
       - name: Publish results to Xray
         run: |
-          TEST_EXECUTION_KEY="DEV-112"  # default for main_branch
+          TEST_EXECUTION_KEY="DEV-113"  # default for main_branch
           if [[ "${GITHUB_REF}" == "refs/heads/feature/"* ]]; then
             # dynamic naming of execution as branch_name
             TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"
