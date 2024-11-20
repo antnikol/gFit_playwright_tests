@@ -32,24 +32,23 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
+      - name: Create report directory
+        run: mkdir -p playwright-report
+
       - name: Run Playwright tests
-        run: npx playwright test
+        run: npx playwright test --output=playwright-report
         env:
           CI: true
 
-      - name: Verify test results
-        run: |
-          if [ ! -f results.xml ]; then
-            echo "Error: Test results file not found!"
-            exit 1
-          fi
+      - name: List files in playwright-report before uploading to Xray
+        run: ls -l playwright-report
 
-      - name: Upload Playwright JUnit Report
+      - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-junit-results
-          path: results.xml
+          name: playwright-report
+          path: playwright-report/
           retention-days: 30
 
       - name: Get Xray API Token
@@ -65,64 +64,71 @@ jobs:
 
       - name: Publish results to Xray
         run: |
-          TEST_EXECUTION_KEY=""  # default as empty string
-
-          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            TEST_EXECUTION_KEY="MAIN-${GITHUB_SHA}"
-
-            # Create Test Execution if it doesn't exist
-            CREATE_EXECUTION_RESPONSE=$(curl -s -X GET \
-              -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              "https://gfitn.atlassian.net/rest/api/2/issue/${TEST_EXECUTION_KEY}")
-
-            if echo "$CREATE_EXECUTION_RESPONSE" | grep -q '"errorMessages":'; then
-              echo "Test Execution ${TEST_EXECUTION_KEY} does not exist. Creating..."
-              RESPONSE=$(curl -s -X POST \
-                -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-                -H "Content-Type: application/json" \
-                -d '{
-                      "fields": {
-                        "project": { "key": "DEV" },
-                        "summary": "[AUTO] Test Execution for main branch - ${GITHUB_SHA}",
-                        "issuetype": { "name": "Test Execution" }
-                      }
-                    }' \
-                "https://gfitn.atlassian.net/rest/api/2/issue")
-
-              TEST_EXECUTION_KEY=$(echo "$RESPONSE" | jq -r '.key')
-
-              if [[ "$TEST_EXECUTION_KEY" == "null" || -z "$TEST_EXECUTION_KEY" ]]; then
-                echo "Error: Failed to create Test Execution."
-                echo "Response: $RESPONSE"
-                exit 1
-              fi
-              echo "New Test Execution created: $TEST_EXECUTION_KEY"
-            else
-              echo "Test Execution ${TEST_EXECUTION_KEY} already exists."
-            fi
-          elif [[ "${GITHUB_REF}" == "refs/heads/feature/"* ]] || [[ "${GITHUB_REF}" == "refs/heads/test/"* ]]; then
+          TEST_EXECUTION_KEY="DEV-112"  # default for main_branch
+          if [[ "${GITHUB_REF}" == "refs/heads/feature/"* ]]; then
+            # dynamic naming of execution as branch_name
             TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"
+          elif [[ "${GITHUB_REF}" == "refs/heads/test/"* ]]; then
+            TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"  
           fi
 
-          # Upload test results (temp_ "https://gfitn.atlassian.net/api/v2/import/execution/junit" \)
+          # Check if Test Execution exists in Xray
+          CREATE_EXECUTION_RESPONSE=$(curl -s -X GET \
+            -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "https://gfitn.atlassian.net/rest/api/2/issue/${TEST_EXECUTION_KEY}")
+
+          # If Test Execution does not exist, create it
+          if echo "$CREATE_EXECUTION_RESPONSE" | grep -q '"errorMessages":'; then
+            echo "Test Execution ${TEST_EXECUTION_KEY} does not exist. Creating..."
+            RESPONSE=$(curl -s -X POST \
+              -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                    "fields": {
+                      "project": { "key": "DEV" },
+                      "summary": "[AUTO] Test Execution for '${GITHUB_REF##*/}'",
+                      "issuetype": { "name": "Test Execution" }
+                    }
+                  }' \
+              "https://gfitn.atlassian.net/rest/api/2/issue")
+
+            # Get created Test Execution key
+            TEST_EXECUTION_KEY=$(echo "$RESPONSE" | jq -r '.key')
+
+            # Check if Test Execution creation was successful
+            if [[ "$TEST_EXECUTION_KEY" == "null" || -z "$TEST_EXECUTION_KEY" ]]; then
+              echo "Error: Failed to create Test Execution."
+              echo "Response: $RESPONSE"
+              exit 1
+            fi
+
+            echo "New Test Execution created: $TEST_EXECUTION_KEY"
+          else
+            echo "Test Execution ${TEST_EXECUTION_KEY} already exists."
+          fi
+
+          # Publish results to Xray
           curl -X POST \
             -u ${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
             -H "Content-Type: multipart/form-data" \
-            -F "file=@results.xml" \
+            -F "file=@playwright-report/test-results.xml" \
             -F "projectKey=DEV" \
             -F "testExecutionKey=${TEST_EXECUTION_KEY}" \
-            "https://xray.cloud.getxray.app/api/v2/import/execution/junit" \
+            "https://gfitn.atlassian.net/api/v2/import/execution/junit" \
             -v
 
       - name: Send report to Telegram
         if: always()
         run: |
           STATUS="Success"
-          if [ ${{ job.status }} != "success" ]; then
+          if [ ${{ steps.test.outcome }} != "success" ]; then
             STATUS="Failed"
           fi
-          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          echo "Job URL: ${{ github.run_url }}"
+          echo "Job URL: ${{ github.event.workflow_run.url }}"
+
+          curl -X POST "https://api.telegram.org/bot7824475005:AAHMni_EljMyh3L8qKqXdafbetJD9gUxnkY/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
               "chat_id": "473468570",
