@@ -105,7 +105,7 @@ jobs:
             TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"
           fi
 
-          # Upload test results (temp_ "https://gfitn.atlassian.net/api/v2/import/execution/junit" \)
+          # Upload test results (_temp_ "https://gfitn.atlassian.net/api/v2/import/execution/junit" \)
           curl -X POST \
             -u ${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
             -H "Content-Type: multipart/form-data" \
