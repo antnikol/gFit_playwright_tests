@@ -32,10 +32,14 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
+      - name: Create report directory
+        run: mkdir -p playwright-report
+
       - name: Run Playwright tests
         run: npx playwright test --reporter=junit --output=playwright-report
         env:
           CI: true
+
       - name: List files in playwright-report before uploading to Xray
         run: ls -l playwright-report
 
