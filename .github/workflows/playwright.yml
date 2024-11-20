@@ -36,7 +36,7 @@ jobs:
         run: mkdir -p playwright-report
 
       - name: Run Playwright tests
-        run: npx playwright test --reporter=junit --output=playwright-report
+        run: npx playwright test --output=playwright-report
         env:
           CI: true
 
