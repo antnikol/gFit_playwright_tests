@@ -119,7 +119,7 @@ jobs:
         if: always()
         run: |
           STATUS="Success"
-          if [ ${{ steps.test.conclusion }} != "success" ]; then
+          if [ ${{ job.status }} != "success" ]; then
             STATUS="Failed"
           fi
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
