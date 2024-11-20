@@ -121,9 +121,10 @@ jobs:
         if: always()
         run: |
           STATUS="Success"
-          if [ ${{ steps.test.outcome }} != "success" ]; then
+          if [ "${{ steps.test.outcome }}" != "success" ]; then
             STATUS="Failed"
           fi
+          echo "Job URL: ${{ github.run_url }}"  # Додайте цей рядок для перевірки значення
 
           curl -X POST "https://api.telegram.org/bot7824475005:AAHMni_EljMyh3L8qKqXdafbetJD9gUxnkY/sendMessage" \
             -H "Content-Type: application/json" \
