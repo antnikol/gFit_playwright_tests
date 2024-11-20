@@ -87,7 +87,7 @@ jobs:
               -d '{
                     "fields": {
                       "project": { "key": "DEV" },
-                      "summary": "[AUTO] Test Execution for '${GITHUB_REF##*/}'",
+                      "summary": "[AUTO] Test Execution '${GITHUB_REF##*/}'",
                       "issuetype": { "name": "Test Execution" }
                     }
                   }' \
@@ -115,7 +115,7 @@ jobs:
             -F "file=@playwright-report/test-results.xml" \
             -F "projectKey=DEV" \
             -F "testExecutionKey=${TEST_EXECUTION_KEY}" \
-            "https://gfitn.atlassian.net/api/v2/import/execution/junit" \
+            "https://xray.cloud.getxray.app/api/v2/import/execution/junit" \
             -v
 
       - name: Send report to Telegram
