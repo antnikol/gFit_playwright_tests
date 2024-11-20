@@ -87,7 +87,7 @@ jobs:
               -d '{
                     "fields": {
                       "project": { "key": "DEV" },
-                      "summary": "Test Execution for '${GITHUB_REF##*/}'",
+                      "summary": "[AUTO] Test Execution for '${GITHUB_REF##*/}'",
                       "issuetype": { "name": "Test Execution" }
                     }
                   }' \
@@ -127,4 +127,8 @@ jobs:
 
           curl -X POST "https://api.telegram.org/bot7824475005:AAHMni_EljMyh3L8qKqXdafbetJD9gUxnkY/sendMessage" \
             -H "Content-Type: application/json" \
-            -d '{"chat_id": "473468570", "text": "Playwright Tests: *'${STATUS}'*%0ARepository: '${{ github.repository }}'%0ABranch: '${{ github.ref_name }}'%0AJob URL: '${{ github.run_url }}'", "parse_mode": "Markdown"}'
+            -d '{
+              "chat_id": "473468570",
+              "text": "Playwright Tests: *'${STATUS}'*\nRepository: '${{ github.repository }}'\nBranch: '${{ github.ref_name }}'\nJob URL: '${{ github.run_url }}'",
+              "parse_mode": "Markdown"
+            }'
