@@ -121,7 +121,7 @@ jobs:
         if: always()
         run: |
           STATUS="Success"
-          if [ "$STATUS" != "success" ]; then
+          if [ ${{ steps.test.outcome }} != "success" ]; then
             STATUS="Failed"
           fi
           echo "Job URL: ${{ github.run_url }}"
