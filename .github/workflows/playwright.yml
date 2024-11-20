@@ -115,7 +115,8 @@ jobs:
             -F "file=@playwright-report/test-results.xml" \
             -F "projectKey=DEV" \
             -F "testExecutionKey=${TEST_EXECUTION_KEY}" \
-            "https://gfitn.atlassian.net/api/v2/import/execution/junit"
+            "https://gfitn.atlassian.net/api/v2/import/execution/junit" \
+            -v
 
       - name: Send report to Telegram
         if: always()
