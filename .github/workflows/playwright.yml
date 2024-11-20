@@ -110,7 +110,7 @@ jobs:
 
           # Publish results to Xray
           curl -X POST \
-            -u ${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
+            -H "Authorization: Bearer ${XRAY_TOKEN}" \
             -H "Content-Type: multipart/form-data" \
             -F "file=@playwright-report/test-results.xml" \
             -F "projectKey=DEV" \
