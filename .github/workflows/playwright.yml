@@ -36,6 +36,16 @@ jobs:
         run: npx playwright test --reporter=junit --output=playwright-report
         env:
           CI: true
+      - name: List files in playwright-report before uploading to Xray
+        run: ls -l playwright-report
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
 
       - name: Get Xray API Token
         run: |
@@ -114,11 +124,3 @@ jobs:
           curl -X POST "https://api.telegram.org/bot7824475005:AAHMni_EljMyh3L8qKqXdafbetJD9gUxnkY/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{"chat_id": "473468570", "text": "Playwright Tests: *'${STATUS}'*%0ARepository: '${{ github.repository }}'%0ABranch: '${{ github.ref_name }}'%0AJob URL: '${{ github.run_url }}'", "parse_mode": "Markdown"}'
-
-      - name: Upload Playwright Report
-        uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
