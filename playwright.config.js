@@ -21,11 +21,10 @@ module.exports = defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 2 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['@xray-app/playwright-junit-reporter', { outputFile: 'results.xml' }]],
+  reporter: [
     //['html', { outputFolder: 'playwright-report', open: 'never' }], // HTML репортер
-    //['junit', { outputFile: 'playwright-report/test-results.xml' }]  // XML репортер
-    //['@xray-app/playwright-junit-reporter', { outputFile: 'results.xml' }],
-  
+    ['junit', { outputFile: 'playwright-report/test-results.xml' }]  // XML репортер
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     headless: true,
