@@ -111,7 +111,6 @@ jobs:
           if [ ! -f "$REGISTRY_FILE" ]; then
             touch "$REGISTRY_FILE"
           fi
-
           # Lock the file for writing (to prevent concurrent writes)
           exec 200>"$REGISTRY_FILE".lock
           flock -n 200 || { echo "Failed to acquire lock on $REGISTRY_FILE"; exit 1; }
@@ -122,8 +121,8 @@ jobs:
 
           if [[ -z "$TEST_EXECUTION_KEY" ]]; then
             echo "No Test Execution Key found for branch $BRANCH_NAME. Checking Xray..."
-
-            # Create a new Test Execution in Xray
+            
+            # Create a new Test Execution in Xray if the key doesn't exist
             RESPONSE=$(curl -s -X POST \
               -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
               -H "Content-Type: application/json" \
@@ -135,18 +134,18 @@ jobs:
                     }
                   }' \
               "https://gfitn.atlassian.net/rest/api/2/issue")
-
+              
             TEST_EXECUTION_KEY=$(echo "$RESPONSE" | jq -r '.key')
-
+            
             if [[ "$TEST_EXECUTION_KEY" == "null" || -z "$TEST_EXECUTION_KEY" ]]; then
               echo "Error: Failed to create Test Execution."
               echo "Response: $RESPONSE"
               exit 1
             fi
-
+            
             echo "New Test Execution created: $TEST_EXECUTION_KEY"
-
-            # Save the new key to the registry
+            
+            # Save the new key to the registry only if it's new
             echo "${BRANCH_NAME} ${TEST_EXECUTION_KEY}" >> "$REGISTRY_FILE"
           else
             echo "Found existing Test Execution Key for branch $BRANCH_NAME: $TEST_EXECUTION_KEY"
@@ -154,9 +153,8 @@ jobs:
 
           # Release the lock after writing
           exec 200>&-
-
           # Use the TEST_EXECUTION_KEY for further steps
-          echo "Using Test Execution Key: $TEST_EXECUTION_KEY"
+          echo "Using Test Execution Key: $TEST_EXECUTION_KEY
 
       - name: Debug git remote configuration
         run: |
