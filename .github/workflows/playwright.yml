@@ -170,9 +170,11 @@ jobs:
 
       - name: Commit and push changes to registry file
         run: |
-          git add test_execution_registry.txt
-          git commit -m "Update test execution registry"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} $GITHUB_REF
+          git diff --quiet test_execution_registry.txt || {
+            git add test_execution_registry.txt
+            git commit -m "Update test execution registry"
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} $GITHUB_REF
+          }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
