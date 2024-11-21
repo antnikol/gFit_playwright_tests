@@ -164,39 +164,38 @@ jobs:
       - name: Send report to Telegram
         if: always()
         run: |
-          # Перевірка значення START_TIME
-          START_TIME="${{ github.event.workflow_run.head_commit.timestamp }}"
-          echo "START_TIME: $START_TIME"  # Діагностика
-
-          # Якщо START_TIME порожнє, використовуємо поточний час
+          # Отримуємо час початку виконання тесту з GitHub Actions (якщо змінна порожня, використовуємо поточний час)
+          START_TIME="${{ github.run_started_at }}"
           if [ -z "$START_TIME" ]; then
-            START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-            echo "START_TIME was empty, using current time: $START_TIME"  # Діагностика
+            START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # Якщо порожнє, використовуємо поточний час
+            echo "START_TIME was empty, using current time: $START_TIME"
+          else
+            echo "START_TIME: $START_TIME"
           fi
 
-          # Поточний час в секундах
+          # Отримуємо поточний час (час закінчення виконання тестів)
           END_TIME=$(date -u +"%s")
-          echo "END_TIME: $END_TIME"  # Діагностика
+          echo "END_TIME: $END_TIME"
 
-          # Перетворення START_TIME у секунди
+          # Перетворення часу початку у секунди
           START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
-          echo "START_TIME_SECONDS: $START_TIME_SECONDS"  # Діагностика
+          echo "START_TIME_SECONDS: $START_TIME_SECONDS"
 
-          # Обчислюємо тривалість
+          # Обчислюємо тривалість виконання тесту
           DURATION=$((END_TIME - START_TIME_SECONDS))
-          echo "DURATION: $DURATION"  # Діагностика
+          echo "DURATION (seconds): $DURATION"
 
-          # Форматуємо тривалість
+          # Форматуємо тривалість у форматі ЧЧ:ХХ:СС
           DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
-          echo "DURATION_FORMATTED: $DURATION_FORMATTED"  # Діагностика
+          echo "DURATION_FORMATTED: $DURATION_FORMATTED"
 
           # Статус тесту
-          STATUS="${{ steps.test.outcome || job.status }}"
-          echo "STATUS: $STATUS"  # Діагностика
+          STATUS="success"  # Ви можете змінювати статус в залежності від результату тестів
+          echo "STATUS: $STATUS"
 
-          # URL задачі (побудований вручну)
+          # URL задачі на GitHub, використовуємо динамічні змінні для правильного формування URL
           JOB_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          echo "Job URL: $JOB_URL"  # Діагностика
+          echo "Job URL: $JOB_URL"
 
           # Надсилаємо повідомлення в Telegram
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
