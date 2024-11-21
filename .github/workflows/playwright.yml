@@ -64,7 +64,7 @@ jobs:
 
       - name: Publish results to Xray
         run: |
-          TEST_EXECUTION_KEY="DEV-113"  # default for main_branch
+          TEST_EXECUTION_KEY="DEV-112"  # default for main_branch
           if [[ "${GITHUB_REF}" == "refs/heads/feature/"* ]]; then
             TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"
           elif [[ "${GITHUB_REF}" == "refs/heads/test/"* ]]; then
@@ -106,12 +106,17 @@ jobs:
 
           # Prepare JUnit XML results
           XML_FILE_PATH="playwright-report/test-results.xml"
-          curl -X POST \
+          curl -H "Content-Type: text/xml" -X POST \
             -H "Authorization: Bearer $XRAY_TOKEN" \
-            -H "Content-Type: text/xml" \
-            --data @"$XML_FILE_PATH" \
-            "https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-12&revision=v1.0.0" \
-            -v
+            --data @"playwright-report/test-results.xml" \
+            https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecKey=DEV-112&testPlanKey=DEV-12&revision=v1.0.0
+
+          # curl -X POST \
+          #   -H "Authorization: Bearer $XRAY_TOKEN" \
+          #   -H "Content-Type: text/xml" \
+          #   --data @"$XML_FILE_PATH" \
+          #   "https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-12&revision=v1.0.0" \
+          #   -v
 
       - name: Send report to Telegram
         if: always()
