@@ -220,7 +220,7 @@ jobs:
       #       echo "Test results uploaded successfully to Xray."
       #     fi
 
-      # - name: Debug GitHub context
+      # - name: Debug GitHub context +
       #   run: |
       #     echo "GITHUB_CONTEXT: ${{ toJson(github) }}"
 
