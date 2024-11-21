@@ -74,7 +74,7 @@ jobs:
             -F "file=@playwright-report/test-results.xml" \
             -F "projectKey=DEV" \
             -F "testExecutionKey=${TEST_EXECUTION_KEY}" \
-            "https://xray.cloud.getxray.app/api/v1/import/execution/junit" \
+            "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit" \
             --verbose
 
       - name: Send report to Telegram
