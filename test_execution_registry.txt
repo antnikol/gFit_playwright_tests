@@ -1,1 +1,2 @@
 main DEV-142
+Smoke-tests DEV-151
