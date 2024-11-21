@@ -139,14 +139,15 @@ jobs:
         if: always()
         run: |
           START_TIME="${{ github.event.repository.created_at }}"
-          END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          STATUS="${{ steps.test.outcome }}"
-          DURATION=$(date -ud @$(($(date -ud "$END_TIME" +%s) - $(date -ud "$START_TIME" +%s))) +%H:%M:%S)
+          END_TIME=$(date -u +"%s")  
+          DURATION=$((END_TIME - START_TIME))
+          DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
 
+          STATUS="${{ steps.test.outcome }}"  
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
               "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-              "text": "Playwright Tests: *'${STATUS}'*\nRepository: '${{ github.repository }}'\nBranch: '${{ github.ref_name }}'\nDuration: '${DURATION}'\nJob URL: '${{ github.run_url }}'",
+              "text": "Playwright Tests: *'${STATUS}'*\nRepository: '${{ github.repository }}'\nBranch: '${{ github.ref_name }}'\nDuration: '${DURATION_FORMATTED}'\nJob URL: '${{ github.run_url }}'",
               "parse_mode": "Markdown"
             }'
