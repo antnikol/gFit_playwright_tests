@@ -163,10 +163,10 @@ jobs:
           git remote -v
           git config --list
 
-      - name: Pull latest changes
-        run: |
-          git fetch origin
-          git reset --hard origin/${GITHUB_REF##*/}
+      # - name: Pull latest changes
+      #   run: |
+      #     git fetch origin
+      #     git reset --hard origin/${GITHUB_REF##*/}
 
       - name: Commit and push changes to registry file
         run: |
