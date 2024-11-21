@@ -215,4 +215,5 @@ jobs:
 
           PASSED=$(xmllint --xpath "string(//testsuite/@tests)" playwright-report/test-results.xml)
           FAILED=$(xmllint --xpath "string(//testsuite/@failures)" playwright-report/test-results.xml)
-          echo "PASSED
+          echo "PASSED"
+          echo "FAILED=$FAILED"
