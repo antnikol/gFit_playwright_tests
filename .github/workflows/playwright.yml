@@ -104,12 +104,13 @@ jobs:
             echo "Test Execution ${TEST_EXECUTION_KEY} already exists."
           fi
 
-          # Publish results to Xray
+          # Prepare JUnit XML results
+          XML_FILE_PATH="playwright-report/test-results.xml"
           curl -X POST \
             -H "Authorization: Bearer $XRAY_TOKEN" \
             -H "Content-Type: text/xml" \
-            --data @"playwright-report/test-results.xml" \
-            "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}" \
+            --data @"$XML_FILE_PATH" \
+            "https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-12&revision=v1.0.0" \
             -v
 
       - name: Send report to Telegram
