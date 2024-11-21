@@ -158,9 +158,12 @@ jobs:
         run: |
           git add test_execution_registry.txt
           git commit -m "Update test execution registry"
-          git push origin $GITHUB_REF
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} $GITHUB_REF
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-          # UPLOAD JUnit XML results
+      - name: UPLOAD JUnit XML results
+        run: |
           RESPONSE=$(curl -X POST \
             -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
             -H "Content-Type: text/xml" \
