@@ -153,7 +153,7 @@ jobs:
           # Release the lock after writing
           exec 200>&-
 
-          # Use the TEST_EXECUTION_KEY for further steps
+          # Use the TEST_EXECUTION_KEY for further steps+
           echo "Using Test Execution Key: $TEST_EXECUTION_KEY"
 
           # Upload test results to Xray
