@@ -191,38 +191,38 @@ jobs:
             git push https://github.com/antnikol/gFit_playwright_tests "$GITHUB_REF"
           }
 
-      - name: UPLOAD JUnit XML results
-        run: |
-          RESPONSE=$(curl -X POST \
-            -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
-            -H "Content-Type: text/xml" \
-            --data @"playwright-report/test-results.xml" \
-            "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-129")
+      # - name: UPLOAD JUnit XML results
+      #   run: |
+      #     RESPONSE=$(curl -X POST \
+      #       -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
+      #       -H "Content-Type: text/xml" \
+      #       --data @"playwright-report/test-results.xml" \
+      #       "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-129")
 
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
-          ERROR_MESSAGE=$(echo "$RESPONSE" | head -n -1)
+      #     HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+      #     ERROR_MESSAGE=$(echo "$RESPONSE" | head -n -1)
 
-          if [ "$HTTP_CODE" -ne 200 ]; then
-            echo "Error: Failed to upload test results to Xray. HTTP Status: $HTTP_CODE"
-            echo "Response: $ERROR_MESSAGE"
+      #     if [ "$HTTP_CODE" -ne 200 ]; then
+      #       echo "Error: Failed to upload test results to Xray. HTTP Status: $HTTP_CODE"
+      #       echo "Response: $ERROR_MESSAGE"
 
-            # Send error message to Telegram
-            curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-              -H "Content-Type: application/json" \
-              -d '{
-                "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-                "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                "parse_mode": "Markdown"
-              }'
+      #       # Send error message to Telegram
+      #       curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+      #         -H "Content-Type: application/json" \
+      #         -d '{
+      #           "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+      #           "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+      #           "parse_mode": "Markdown"
+      #         }'
 
-            exit 1
-          else
-            echo "Test results uploaded successfully to Xray."
-          fi
+      #       exit 1
+      #     else
+      #       echo "Test results uploaded successfully to Xray."
+      #     fi
 
-      - name: Debug GitHub context
-        run: |
-          echo "GITHUB_CONTEXT: ${{ toJson(github) }}"
+      # - name: Debug GitHub context
+      #   run: |
+      #     echo "GITHUB_CONTEXT: ${{ toJson(github) }}"
 
       - name: Send report to Telegram
         if: always()
@@ -239,5 +239,18 @@ jobs:
 
           PASSED=$(xmllint --xpath "string(//testsuite/@tests)" playwright-report/test-results.xml)
           FAILED=$(xmllint --xpath "string(//testsuite/@failures)" playwright-report/test-results.xml)
-          echo "PASSED"
-          echo "FAILED=$FAILED"
+          echo "PASSED=$PASSED" >> $GITHUB_ENV
+          echo "FAILED=$FAILED" >> $GITHUB_ENV
+
+          JOB_URL="https://github.com/antnikol/gFit\_playwright\_tests/actions/runs/${{ github.run_id }}"
+          TOTAL=$(xmllint --xpath "string(//testsuite/@tests)" playwright-report/test-results.xml)
+
+          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+              "text": "Playwright Tests: *'${STATUS}'*\nRepository: antnikol/gFit\\_playwright\\_tests\nBranch: '${{ github.ref_name }}'\nTest duration: '${DURATION_FORMATTED}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: https://github.com/antnikol/gFit\\_playwright\\_tests/actions/runs/'${{ github.run_id }}'",
+              "parse_mode": "Markdown"
+            }'
+        env:
+          START_TIME: ${{ env.START_TIME }}
