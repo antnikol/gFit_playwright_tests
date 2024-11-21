@@ -157,6 +157,10 @@ jobs:
             #   "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-87&revision=v1.0.0" \
             #   -v
 
+      - name: Debug GitHub context
+        run: |
+          echo "GITHUB_CONTEXT: ${{ toJson(github) }}"
+
       - name: Send report to Telegram
         if: always()
         run: |
@@ -190,8 +194,8 @@ jobs:
           STATUS="${{ steps.test.outcome || job.status }}"
           echo "STATUS: $STATUS"  # Діагностика
 
-          # URL задачі
-          JOB_URL="${{ github.run_url }}"
+          # URL задачі (побудований вручну)
+          JOB_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           echo "Job URL: $JOB_URL"  # Діагностика
 
           # Надсилаємо повідомлення в Telegram
