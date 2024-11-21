@@ -161,16 +161,24 @@ jobs:
         if: always()
         run: |
           START_TIME="${{ github.event.workflow_run.head_commit.timestamp }}"
+          echo "START_TIME: $START_TIME" 
           if [ -z "$START_TIME" ]; then
-            START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # поточний час у форматі ISO 8601
+            START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # Якщо порожньо, використовуємо поточний час
+            echo "START_TIME was empty, using current time: $START_TIME"  # Діагностика
           fi
           END_TIME=$(date -u +"%s")
+          echo "END_TIME: $END_TIME"
           START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
+          echo "START_TIME_SECONDS: $START_TIME_SECONDS"
           DURATION=$((END_TIME - START_TIME_SECONDS))
+          echo "DURATION: $DURATION" 
           DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
+          echo "DURATION_FORMATTED: $DURATION_FORMATTED"
 
           STATUS="${{ steps.test.outcome || job.status }}" 
-          JOB_URL="${{ github.run_url }}" 
+          echo "STATUS: $STATUS"
+          JOB_URL="${{ github.run_url }}"
+          echo "Job URL: $JOB_URL" 
 
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
