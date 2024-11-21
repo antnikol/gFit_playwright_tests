@@ -28,6 +28,15 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Get start time for the tests
+          START_TIME="${{ github.run_started_at }}"
+          if [ -z "$START_TIME" ]; then
+            START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # If empty - use current time
+            echo "START_TIME was empty, using current time: $START_TIME"
+          else
+            echo "START_TIME: $START_TIME"
+          fi
+
           npm ci
           if [ $? -ne 0 ]; then
             echo "Error: Failed to install dependencies."
@@ -157,6 +166,27 @@ jobs:
             #   "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-87&revision=v1.0.0" \
             #   -v
 
+          HTTP_CODE=$(tail -n 1 response.log)
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            ERROR_MESSAGE=$(cat response.log)
+            echo "Error: Failed to upload test results to Xray. HTTP Status: $HTTP_CODE"
+            echo "Response: $ERROR_MESSAGE"
+
+            # Send error message to Telegram
+            curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+                "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                "parse_mode": "Markdown"
+              }'
+
+            exit 1
+          else
+            echo "Test results uploaded successfully to Xray."
+          fi
+
       - name: Debug GitHub context
         run: |
           echo "GITHUB_CONTEXT: ${{ toJson(github) }}"
@@ -164,44 +194,24 @@ jobs:
       - name: Send report to Telegram
         if: always()
         run: |
-          # Отримуємо час початку виконання тесту з GitHub Actions (якщо змінна порожня, використовуємо поточний час)
-          START_TIME="${{ github.run_started_at }}"
-          if [ -z "$START_TIME" ]; then
-            START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # Якщо порожнє, використовуємо поточний час
-            echo "START_TIME was empty, using current time: $START_TIME"
-          else
-            echo "START_TIME: $START_TIME"
-          fi
-
-          # Отримуємо поточний час (час закінчення виконання тестів)
           END_TIME=$(date -u +"%s")
-          echo "END_TIME: $END_TIME"
-
-          # Перетворення часу початку у секунди
           START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
-          echo "START_TIME_SECONDS: $START_TIME_SECONDS"
-
-          # Обчислюємо тривалість виконання тесту
           DURATION=$((END_TIME - START_TIME_SECONDS))
-          echo "DURATION (seconds): $DURATION"
-
-          # Форматуємо тривалість у форматі ЧЧ:ХХ:СС
           DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
-          echo "DURATION_FORMATTED: $DURATION_FORMATTED"
 
-          # Статус тесту (можна налаштувати для використання конкретної змінної або результатів тестів)
           STATUS="success"  # Ви можете змінювати статус в залежності від результату тестів
-          echo "STATUS: $STATUS"
 
-          # URL задачі на GitHub, використовуємо динамічні змінні для правильного формування URL
-          JOB_URL="https://github.com/gFit_playwright_tests/actions/runs/${{ github.run_id }}"
-          echo "Job URL: $JOB_URL"
+          PASSED=$(xmllint --xpath "string(//testsuite/@tests)" playwright-report/test-results.xml)
+          FAILED=$(xmllint --xpath "string(//testsuite/@failures)" playwright-report/test-results.xml)
+          echo "PASSED=$PASSED" >> $GITHUB_ENV
+          echo "FAILED=$FAILED" >> $GITHUB_ENV
 
-          # Надсилаємо повідомлення в Telegram
+          JOB_URL="https://github.com/antnikol/gFit_playwright_tests/actions/runs/${{ github.run_id }}"
+
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
               "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-              "text": "Playwright Tests: *'${STATUS}'*\nRepository: '${{ github.repository }}'\nBranch: '${{ github.ref_name }}'\nDuration: '${DURATION_FORMATTED}'\nJob URL: '${JOB_URL}'",
+              "text": "Playwright Tests: *'${STATUS}'*\nRepository: 'antnikol/gFit_playwright_tests'\nBranch: '${{ github.ref_name }}'\nDuration: '${DURATION_FORMATTED}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: '${JOB_URL}'",
               "parse_mode": "Markdown"
             }'
