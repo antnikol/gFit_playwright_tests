@@ -187,7 +187,7 @@ jobs:
               -H "Content-Type: application/json" \
               -d '{
                 "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-                "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/antnikol/gFit\_playwright\_tests/actions/runs/${{ github.run_id }}",
                 "parse_mode": "Markdown"
               }'
 
@@ -203,11 +203,13 @@ jobs:
       - name: Send report to Telegram
         if: always()
         run: |
-          END_TIME=$(date -u +"%s")
+          END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          # END_TIME=$(date -u +"%s")
           echo "END_TIME: $END_TIME"
-          START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
-          DURATION=$((END_TIME - START_TIME_SECONDS))
-          DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
+          # START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
+          # echo "START_TIME: $START_TIME_SECONDS"
+          # DURATION=$((END_TIME - START_TIME_SECONDS))
+          # DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
 
           STATUS="success"  # Ви можете змінювати статус в залежності від результату тестів
 
@@ -217,11 +219,12 @@ jobs:
           echo "FAILED=$FAILED" >> $GITHUB_ENV
 
           JOB_URL="https://github.com/antnikol/gFit_playwright_tests/actions/runs/${{ github.run_id }}"
+          TOTAL=$(xmllint --xpath "string(//testsuite/@tests)" playwright-report/test-results.xml)
 
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
               "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-              "text": "Playwright Tests: *'${STATUS}'*\nRepository: 'antnikol/gFit_playwright_tests'\nBranch: '${{ github.ref_name }}'\nStart time: '${START_TIME}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: '${JOB_URL}'",
+              "text": "Playwright Tests: *'${STATUS}'*\nRepository: 'antnikol/gFit\_playwright\_tests'\nBranch: '${{ github.ref_name }}'\nStart time: '${START_TIME}'\nEnd time: '${END_TIME}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: '${JOB_URL}'",
               "parse_mode": "Markdown"
             }'
