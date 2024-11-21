@@ -37,11 +37,10 @@ jobs:
         env:
           CI: true
 
-      - name: Verify test results file
+      - name: Verify test results
         run: |
           if [ ! -f ./results.xml ]; then
-            echo "Error: Test results file not found in ./"
-            ls -la ./  # Перевіримо вміст кореневої директорії
+            echo "Error: Test results file not found in ./results.xml!"
             exit 1
           else
             echo "Test results file found: ./results.xml"
@@ -49,11 +48,14 @@ jobs:
 
       - name: Upload Playwright JUnit Report
         uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
         with:
           name: playwright-junit-results
           path: ./results.xml
           retention-days: 30
+          if-no-files-found: warn
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
 
       - name: Get Xray API Token
         run: |
@@ -72,50 +74,18 @@ jobs:
 
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
             TEST_EXECUTION_KEY="MAIN-${GITHUB_SHA}"
-
-            # Create Test Execution if it doesn't exist
-            CREATE_EXECUTION_RESPONSE=$(curl -s -X GET \
-              -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              "https://gfitn.atlassian.net/rest/api/2/issue/${TEST_EXECUTION_KEY}")
-
-            if echo "$CREATE_EXECUTION_RESPONSE" | grep -q '"errorMessages":'; then
-              echo "Test Execution ${TEST_EXECUTION_KEY} does not exist. Creating..."
-              RESPONSE=$(curl -s -X POST \
-                -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-                -H "Content-Type: application/json" \
-                -d '{
-                      "fields": {
-                        "project": { "key": "DEV" },
-                        "summary": "[AUTO] Test Execution for main branch - ${GITHUB_SHA}",
-                        "issuetype": { "name": "Test Execution" }
-                      }
-                    }' \
-                "https://gfitn.atlassian.net/rest/api/2/issue")
-
-              TEST_EXECUTION_KEY=$(echo "$RESPONSE" | jq -r '.key')
-
-              if [[ "$TEST_EXECUTION_KEY" == "null" || -z "$TEST_EXECUTION_KEY" ]]; then
-                echo "Error: Failed to create Test Execution."
-                echo "Response: $RESPONSE"
-                exit 1
-              fi
-              echo "New Test Execution created: $TEST_EXECUTION_KEY"
-            else
-              echo "Test Execution ${TEST_EXECUTION_KEY} already exists."
-            fi
           elif [[ "${GITHUB_REF}" == "refs/heads/feature/"* ]] || [[ "${GITHUB_REF}" == "refs/heads/test/"* ]]; then
             TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"
           fi
 
           curl -X POST \
-            -u ${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
+            -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
             -H "Content-Type: multipart/form-data" \
             -F "file=@results.xml" \
             -F "projectKey=DEV" \
             -F "testExecutionKey=${TEST_EXECUTION_KEY}" \
-            https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecKey=DEV-112&testPlanKey=DEV-12&revision=v1.0.0 \
-            -v
+            "https://xray.cloud.getxray.app/api/v1/import/execution/junit" \
+            --verbose
 
       - name: Send report to Telegram
         if: always()
