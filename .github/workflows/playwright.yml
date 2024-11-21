@@ -166,26 +166,26 @@ jobs:
             #   "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-87&revision=v1.0.0" \
             #   -v
 
-          HTTP_CODE=$(tail -n 1 response.log)
+          # HTTP_CODE=$(tail -n 1 response.log)
 
-          if [ "$HTTP_CODE" -ne 200 ]; then
-            ERROR_MESSAGE=$(cat response.log)
-            echo "Error: Failed to upload test results to Xray. HTTP Status: $HTTP_CODE"
-            echo "Response: $ERROR_MESSAGE"
+          # if [ "$HTTP_CODE" -ne 200 ]; then
+          #   ERROR_MESSAGE=$(cat response.log)
+          #   echo "Error: Failed to upload test results to Xray. HTTP Status: $HTTP_CODE"
+          #   echo "Response: $ERROR_MESSAGE"
 
-            # Send error message to Telegram
-            curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-              -H "Content-Type: application/json" \
-              -d '{
-                "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-                "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                "parse_mode": "Markdown"
-              }'
+          #   # Send error message to Telegram
+          #   curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          #     -H "Content-Type: application/json" \
+          #     -d '{
+          #       "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+          #       "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+          #       "parse_mode": "Markdown"
+          #     }'
 
-            exit 1
-          else
-            echo "Test results uploaded successfully to Xray."
-          fi
+          #   exit 1
+          # else
+          #   echo "Test results uploaded successfully to Xray."
+          # fi
 
       - name: Debug GitHub context
         run: |
