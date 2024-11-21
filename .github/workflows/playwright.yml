@@ -41,7 +41,7 @@ jobs:
         run: mkdir -p playwright-report
 
       - name: Run Playwright tests
-        run: npx playwright test --output=playwright-report
+        run: npx playwright test --reporter=junit --output=playwright-report
         env:
           CI: true
 
@@ -139,10 +139,11 @@ jobs:
 
             # "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-87&revision=v1.0.0" \
             # XML_FILE_PATH="playwright-report/test-results.xml"
+
             # curl -H "Content-Type: text/xml" -X POST \
             #   -H "Authorization: Bearer $XRAY_TOKEN" \
             #   --data @"playwright-report/test-results.xml" \
-            #   https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecKey=DEV-112&testPlanKey=DEV-12&revision=v1.0.0
+            #   https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecKey=DEV-112&testPlanKey=DEV-87&revision=v1.0.0
 
             # curl -X POST \
             #   -H "Authorization: Bearer $XRAY_TOKEN" \
