@@ -132,7 +132,7 @@ jobs:
             -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
             -H "Content-Type: text/xml" \
             --data @"playwright-report/test-results.xml" \
-            "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}"
+            "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}"
 
             # -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
             # -H "Content-Type: multipart/form-data" \
@@ -166,8 +166,7 @@ jobs:
           DURATION=$((END_TIME - START_TIME_SECONDS))
           DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
 
-          STATUS="${{ steps.test.outcome || job.status }}"  
-
+          STATUS="${{ steps.test.outcome }}"
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
