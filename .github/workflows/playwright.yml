@@ -160,7 +160,7 @@ jobs:
       - name: Send report to Telegram
         if: always()
         run: |
-          START_TIME="${{ github.run_started_at }}"
+          START_TIME="${{ github.event.workflow_run.head_commit.timestamp }}"
           END_TIME=$(date -u +"%s")
           START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
           DURATION=$((END_TIME - START_TIME_SECONDS))
