@@ -41,7 +41,6 @@ jobs:
         run: mkdir -p playwright-report
 
       - name: Run Playwright tests
-        id: test
         run: npx playwright test --output=playwright-report
         env:
           CI: true
@@ -161,7 +160,7 @@ jobs:
           DURATION=$((END_TIME - START_TIME_SECONDS))
           DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
 
-          STATUS="${{ steps.test.outcome }}"  
+          STATUS="${{ steps.test.outcome || job.status }}"  
 
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
