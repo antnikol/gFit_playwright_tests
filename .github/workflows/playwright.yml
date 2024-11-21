@@ -115,7 +115,7 @@ jobs:
               -d '{
                     "fields": {
                       "project": { "key": "DEV" },
-                      "summary": "[AUTO] Test Execution FEATURE/TESTS '${GITHUB_REF##*/}'",
+                      "summary": "[AUTO] Test Execution '${GITHUB_REF##*/}'",
                       "issuetype": { "name": "Test Execution" }
                     }
                   }' \
