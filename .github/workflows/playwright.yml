@@ -160,26 +160,41 @@ jobs:
       - name: Send report to Telegram
         if: always()
         run: |
+          # Перевірка значення START_TIME
           START_TIME="${{ github.event.workflow_run.head_commit.timestamp }}"
-          echo "START_TIME: $START_TIME" 
+          echo "START_TIME: $START_TIME"  # Діагностика
+
+          # Якщо START_TIME порожнє, використовуємо поточний час
           if [ -z "$START_TIME" ]; then
-            START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # Якщо порожньо, використовуємо поточний час
+            START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
             echo "START_TIME was empty, using current time: $START_TIME"  # Діагностика
           fi
+
+          # Поточний час в секундах
           END_TIME=$(date -u +"%s")
-          echo "END_TIME: $END_TIME"
+          echo "END_TIME: $END_TIME"  # Діагностика
+
+          # Перетворення START_TIME у секунди
           START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
-          echo "START_TIME_SECONDS: $START_TIME_SECONDS"
+          echo "START_TIME_SECONDS: $START_TIME_SECONDS"  # Діагностика
+
+          # Обчислюємо тривалість
           DURATION=$((END_TIME - START_TIME_SECONDS))
-          echo "DURATION: $DURATION" 
+          echo "DURATION: $DURATION"  # Діагностика
+
+          # Форматуємо тривалість
           DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
-          echo "DURATION_FORMATTED: $DURATION_FORMATTED"
+          echo "DURATION_FORMATTED: $DURATION_FORMATTED"  # Діагностика
 
-          STATUS="${{ steps.test.outcome || job.status }}" 
-          echo "STATUS: $STATUS"
+          # Статус тесту
+          STATUS="${{ steps.test.outcome || job.status }}"
+          echo "STATUS: $STATUS"  # Діагностика
+
+          # URL задачі
           JOB_URL="${{ github.run_url }}"
-          echo "Job URL: $JOB_URL" 
+          echo "Job URL: $JOB_URL"  # Діагностика
 
+          # Надсилаємо повідомлення в Telegram
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
