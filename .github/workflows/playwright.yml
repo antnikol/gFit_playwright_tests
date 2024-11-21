@@ -29,13 +29,14 @@ jobs:
       - name: Install dependencies
         run: |
           # Get start time for the tests process
-          START_TIME="${{ github.run_started_at }}"
-          if [ -z "$START_TIME" ]; then
-            START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # If empty - use current time
-            echo "START_TIME was empty, using current time: $START_TIME"
-          else
-            echo "START_TIME: $START_TIME"
-          fi
+          START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          # START_TIME="${{ github.run_started_at }}"
+          # if [ -z "$START_TIME" ]; then
+          #   START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # If empty - use current time
+          #   echo "START_TIME was empty, using current time: $START_TIME"
+          # else
+          #   echo "START_TIME: $START_TIME"
+          # fi
 
           npm ci
           if [ $? -ne 0 ]; then
