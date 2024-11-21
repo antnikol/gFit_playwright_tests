@@ -27,7 +27,12 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          if [ $? -ne 0 ]; then
+            echo "Error: Failed to install dependencies."
+            exit 1
+          fi
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
@@ -43,31 +48,47 @@ jobs:
       - name: List files in playwright-report before uploading to Xray
         run: ls -l playwright-report
 
-      - name: Upload Playwright Report
-        uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
+      - name: Verify test results
+        run: |
+          if [ ! -f playwright-report/test-results.xml ]; then
+            echo "Error: Test results file not found in playwright-report/test-results.xml!"
+            exit 1
+          elif [ ! -s playwright-report/test-results.xml ]; then
+            echo "Error: Test results file is empty!"
+            exit 1
+          else
+            echo "Test results file verified: playwright-report/test-results.xml"
+          fi
+
+      - name: Validate secrets
+        run: |
+          if [ -z "${{ secrets.XRAY_CLIENT_ID }}" ] || [ -z "${{ secrets.XRAY_CLIENT_SECRET }}" ]; then
+            echo "Error: Missing Xray API credentials."
+            exit 1
+          fi
+          if [ -z "${{ secrets.TELEGRAM_BOT_TOKEN }}" ] || [ -z "${{ secrets.TELEGRAM_CHAT_ID }}" ]; then
+            echo "Error: Missing Telegram API credentials."
+            exit 1
+          fi
 
       - name: Get Xray API Token
         run: |
-          TOKEN=$(curl -s -X POST "https://xray.cloud.getxray.app/api/v1/authenticate" \
+          TOKEN=$(curl -s -X POST "https://xray.cloud.getxray.app/api/v2/authenticate" \
             -H "Content-Type: application/json" \
             -d '{
                   "client_id": "${{ secrets.XRAY_CLIENT_ID }}",
                   "client_secret": "${{ secrets.XRAY_CLIENT_SECRET }}"
-                }')
-          echo "Xray token: $TOKEN"
+                }' | tr -d '"')
+          if [ -z "$TOKEN" ]; then
+            echo "Error: Failed to retrieve Xray token."
+            exit 1
+          fi
           echo "XRAY_TOKEN=$TOKEN" >> $GITHUB_ENV
 
       - name: Publish results to Xray
         run: |
           TEST_EXECUTION_KEY="DEV-112"  # default for main_branch
-          if [[ "${GITHUB_REF}" == "refs/heads/feature/"* ]]; then
-            TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"
-          elif [[ "${GITHUB_REF}" == "refs/heads/test/"* ]]; then
+          if [[ "${GITHUB_REF}" == "refs/heads/feature/"* ]] || [[ "${GITHUB_REF}" == "refs/heads/test/"* ]]; then
             TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"
           fi
 
@@ -86,7 +107,7 @@ jobs:
               -d '{
                     "fields": {
                       "project": { "key": "DEV" },
-                      "summary": "[AUTO] Test Execution '${GITHUB_REF##*/}'",
+                      "summary": "[AUTO] Test Execution FEATURE/TESTS '${GITHUB_REF##*/}'",
                       "issuetype": { "name": "Test Execution" }
                     }
                   }' \
@@ -104,32 +125,28 @@ jobs:
             echo "Test Execution ${TEST_EXECUTION_KEY} already exists."
           fi
 
-          # Prepare JUnit XML results
-          XML_FILE_PATH="playwright-report/test-results.xml"
-          curl -H "Content-Type: text/xml" -X POST \
-            -H "Authorization: Bearer $XRAY_TOKEN" \
-            --data @"playwright-report/test-results.xml" \
-            https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecKey=DEV-112&testPlanKey=DEV-12&revision=v1.0.0
-
-          # curl -X POST \
-          #   -H "Authorization: Bearer $XRAY_TOKEN" \
-          #   -H "Content-Type: text/xml" \
-          #   --data @"$XML_FILE_PATH" \
-          #   "https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-12&revision=v1.0.0" \
-          #   -v
+          # UPLOAD JUnit XML results
+          curl -X POST \
+            -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
+            -H "Content-Type: multipart/form-data" \
+            -F "file=@playwright-report/test-results.xml" \
+            -F "projectKey=DEV" \
+            -F "testExecutionKey=${TEST_EXECUTION_KEY}" \
+            "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit" \
+            --verbose
 
       - name: Send report to Telegram
         if: always()
         run: |
-          STATUS="Success"
-          if [ ${{ steps.test.outcome }} != "success" ]; then
-            STATUS="Failed"
-          fi
-          echo "Job URL: ${{ github.run_url }}"
+          START_TIME="${{ github.event.repository.created_at }}"
+          END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          STATUS="${{ steps.test.outcome }}"
+          DURATION=$(date -ud @$(($(date -ud "$END_TIME" +%s) - $(date -ud "$START_TIME" +%s))) +%H:%M:%S)
+
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
               "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-              "text": "Playwright Tests: *'${STATUS}'*\nRepository: '${{ github.repository }}'\nBranch: '${{ github.ref_name }}'\nJob URL: '${{ github.run_url }}'",
+              "text": "Playwright Tests: *'${STATUS}'*\nRepository: '${{ github.repository }}'\nBranch: '${{ github.ref_name }}'\nDuration: '${DURATION}'\nJob URL: '${{ github.run_url }}'",
               "parse_mode": "Markdown"
             }'
