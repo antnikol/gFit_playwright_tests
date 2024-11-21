@@ -189,12 +189,12 @@ jobs:
           DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
           echo "DURATION_FORMATTED: $DURATION_FORMATTED"
 
-          # Статус тесту
+          # Статус тесту (можна налаштувати для використання конкретної змінної або результатів тестів)
           STATUS="success"  # Ви можете змінювати статус в залежності від результату тестів
           echo "STATUS: $STATUS"
 
           # URL задачі на GitHub, використовуємо динамічні змінні для правильного формування URL
-          JOB_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          JOB_URL="https://github.com/gFit_playwright_tests/actions/runs/${{ github.run_id }}"
           echo "Job URL: $JOB_URL"
 
           # Надсилаємо повідомлення в Telegram
