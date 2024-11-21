@@ -53,7 +53,7 @@ jobs:
 
       - name: Get Xray API Token
         run: |
-          TOKEN=$(curl -s -X POST "https://xray.cloud.getxray.app/api/v2/authenticate" \
+          TOKEN=$(curl -s -X POST "https://xray.cloud.getxray.app/api/v1/authenticate" \
             -H "Content-Type: application/json" \
             -d '{
                   "client_id": "${{ secrets.XRAY_CLIENT_ID }}",
@@ -66,10 +66,9 @@ jobs:
         run: |
           TEST_EXECUTION_KEY="DEV-113"  # default for main_branch
           if [[ "${GITHUB_REF}" == "refs/heads/feature/"* ]]; then
-            # dynamic naming of execution as branch_name
             TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"
           elif [[ "${GITHUB_REF}" == "refs/heads/test/"* ]]; then
-            TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"  
+            TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"
           fi
 
           # Check if Test Execution exists in Xray
@@ -93,16 +92,13 @@ jobs:
                   }' \
               "https://gfitn.atlassian.net/rest/api/2/issue")
 
-            # Get created Test Execution key
             TEST_EXECUTION_KEY=$(echo "$RESPONSE" | jq -r '.key')
 
-            # Check if Test Execution creation was successful
             if [[ "$TEST_EXECUTION_KEY" == "null" || -z "$TEST_EXECUTION_KEY" ]]; then
               echo "Error: Failed to create Test Execution."
               echo "Response: $RESPONSE"
               exit 1
             fi
-
             echo "New Test Execution created: $TEST_EXECUTION_KEY"
           else
             echo "Test Execution ${TEST_EXECUTION_KEY} already exists."
@@ -110,12 +106,10 @@ jobs:
 
           # Publish results to Xray
           curl -X POST \
-            -H "Authorization: Bearer ${XRAY_TOKEN}" \
-            -H "Content-Type: multipart/form-data" \
-            -F "file=@playwright-report/test-results.xml" \
-            -F "projectKey=DEV" \
-            -F "testExecutionKey=${TEST_EXECUTION_KEY}" \
-            "https://xray.cloud.getxray.app/api/v2/import/execution/junit" \
+            -H "Authorization: Bearer $XRAY_TOKEN" \
+            -H "Content-Type: text/xml" \
+            --data @"playwright-report/test-results.xml" \
+            "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}" \
             -v
 
       - name: Send report to Telegram
@@ -126,12 +120,10 @@ jobs:
             STATUS="Failed"
           fi
           echo "Job URL: ${{ github.run_url }}"
-          echo "Job URL: ${{ github.event.workflow_run.url }}"
-
-          curl -X POST "https://api.telegram.org/bot7824475005:AAHMni_EljMyh3L8qKqXdafbetJD9gUxnkY/sendMessage" \
+          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
-              "chat_id": "473468570",
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
               "text": "Playwright Tests: *'${STATUS}'*\nRepository: '${{ github.repository }}'\nBranch: '${{ github.ref_name }}'\nJob URL: '${{ github.run_url }}'",
               "parse_mode": "Markdown"
             }'
