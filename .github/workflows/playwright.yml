@@ -201,6 +201,7 @@ jobs:
           DURATION=$((END_TIME_SECONDS - START_TIME_SECONDS))
           DURATION_FORMATTED=$(printf "%02d:%02d:%02d" $((DURATION / 3600)) $(((DURATION % 3600) / 60)) $((DURATION % 60)))
           echo "Duration: $DURATION_FORMATTED"
+          echo "START_TIME: $START_TIME"
 
           STATUS="success"
 
