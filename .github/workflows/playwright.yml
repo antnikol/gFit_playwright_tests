@@ -121,7 +121,6 @@ jobs:
 
           if [[ -z "$TEST_EXECUTION_KEY" ]]; then
             echo "No Test Execution Key found for branch $BRANCH_NAME. Checking Xray..."
-            
             # Create a new Test Execution in Xray if the key doesn't exist
             RESPONSE=$(curl -s -X POST \
               -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
@@ -134,18 +133,17 @@ jobs:
                     }
                   }' \
               "https://gfitn.atlassian.net/rest/api/2/issue")
-              
             
             TEST_EXECUTION_KEY=$(echo "$RESPONSE" | jq -r '.key')
-            
+
             if [[ "$TEST_EXECUTION_KEY" == "null" || -z "$TEST_EXECUTION_KEY" ]]; then
               echo "Error: Failed to create Test Execution."
               echo "Response: $RESPONSE"
               exit 1
             fi
-            
+
             echo "New Test Execution created: $TEST_EXECUTION_KEY"
-            
+
             # Save the new key to the registry only if it's new
             echo "${BRANCH_NAME} ${TEST_EXECUTION_KEY}" >> "$REGISTRY_FILE"
           else
@@ -154,18 +152,44 @@ jobs:
 
           # Release the lock after writing
           exec 200>&-
+
           # Use the TEST_EXECUTION_KEY for further steps
           echo "Using Test Execution Key: $TEST_EXECUTION_KEY"
 
-      - name: Commit and push changes to registry file
-        run: |
-          git diff --quiet test_execution_registry.txt || {
-            git add test_execution_registry.txt
+          # Upload test results to Xray
+          RESPONSE=$(curl -X POST \
+            -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
+            -H "Content-Type: text/xml" \
+            --data @"playwright-report/test-results.xml" \
+            "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-129")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+          ERROR_MESSAGE=$(echo "$RESPONSE" | head -n -1)
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "Error: Failed to upload test results to Xray. HTTP Status: $HTTP_CODE"
+            echo "Response: $ERROR_MESSAGE"
+
+            # Send error message to Telegram
+            curl -X POST "https://api.telegram.org/bot***/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "chat_id": "***",
+                "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/antnikol/gFit_playwright_tests/actions/runs/11960498632",
+                "parse_mode": "Markdown"
+              }'
+
+            exit 1
+          else
+            echo "Test results uploaded successfully to Xray."
+          fi
+
+          # Git commit and push changes to the registry file
+          git diff --quiet "$REGISTRY_FILE" || {
+            git add "$REGISTRY_FILE"
             git commit -m "Update test execution registry"
-            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} $GITHUB_REF
+            git push https://github.com/antnikol/gFit_playwright_tests "$GITHUB_REF"
           }
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: UPLOAD JUnit XML results
         run: |
@@ -187,7 +211,7 @@ jobs:
               -H "Content-Type: application/json" \
               -d '{
                 "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-                "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/antnikol/gFit\_playwright\_tests/actions/runs/${{ github.run_id }}",
+                "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                 "parse_mode": "Markdown"
               }'
 
