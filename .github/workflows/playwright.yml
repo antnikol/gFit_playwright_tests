@@ -41,6 +41,7 @@ jobs:
         run: mkdir -p playwright-report
 
       - name: Run Playwright tests
+        id: test
         run: npx playwright test --output=playwright-report
         env:
           CI: true
@@ -88,6 +89,8 @@ jobs:
       - name: Publish results to Xray
         run: |
           TEST_EXECUTION_KEY="DEV-112"  # default for main_branch
+          # if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+          #   TEST_EXECUTION_KEY="DEV-${GITHUB_SHA}"
           if [[ "${GITHUB_REF}" == "refs/heads/feature/"* ]] || [[ "${GITHUB_REF}" == "refs/heads/test/"* ]]; then
             TEST_EXECUTION_KEY="DEV-${GITHUB_REF##*/}"
           fi
@@ -135,15 +138,31 @@ jobs:
             "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit" \
             --verbose
 
+            # "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-87&revision=v1.0.0" \
+            # XML_FILE_PATH="playwright-report/test-results.xml"
+            # curl -H "Content-Type: text/xml" -X POST \
+            #   -H "Authorization: Bearer $XRAY_TOKEN" \
+            #   --data @"playwright-report/test-results.xml" \
+            #   https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecKey=DEV-112&testPlanKey=DEV-12&revision=v1.0.0
+
+            # curl -X POST \
+            #   -H "Authorization: Bearer $XRAY_TOKEN" \
+            #   -H "Content-Type: text/xml" \
+            #   --data @"$XML_FILE_PATH" \
+            #   "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-87&revision=v1.0.0" \
+            #   -v
+
       - name: Send report to Telegram
         if: always()
         run: |
-          START_TIME="${{ github.event.repository.created_at }}"
-          END_TIME=$(date -u +"%s")  
-          DURATION=$((END_TIME - START_TIME))
+          START_TIME="${{ github.run_started_at }}"
+          END_TIME=$(date -u +"%s")
+          START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
+          DURATION=$((END_TIME - START_TIME_SECONDS))
           DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
 
           STATUS="${{ steps.test.outcome }}"  
+
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
