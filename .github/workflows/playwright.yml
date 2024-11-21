@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Get start time for the tests
+          # Get start time for the tests process
           START_TIME="${{ github.run_started_at }}"
           if [ -z "$START_TIME" ]; then
             START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # If empty - use current time
@@ -140,11 +140,11 @@ jobs:
           fi
 
           # UPLOAD JUnit XML results
-          curl -X POST \
+          RESPONSE=$(curl -X POST \
             -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
             -H "Content-Type: text/xml" \
             --data @"playwright-report/test-results.xml" \
-            "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-129"
+            "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-129")
 
             # -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
             # -H "Content-Type: multipart/form-data" \
@@ -169,11 +169,11 @@ jobs:
             #   "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-87&revision=v1.0.0" \
             #   -v
 
-          RESPONSE=$(curl -s -w "%{http_code}" -X POST \
-            -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
-            -H "Content-Type: text/xml" \
-            --data @"playwright-report/test-results.xml" \
-            "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-129")
+          # RESPONSE=$(curl -s -w "%{http_code}" -X POST \
+          #   -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
+          #   -H "Content-Type: text/xml" \
+          #   --data @"playwright-report/test-results.xml" \
+          #   "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-129")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
           ERROR_MESSAGE=$(echo "$RESPONSE" | head -n -1)
@@ -204,6 +204,7 @@ jobs:
         if: always()
         run: |
           END_TIME=$(date -u +"%s")
+          echo "END_TIME: $END_TIME"
           START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
           DURATION=$((END_TIME - START_TIME_SECONDS))
           DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
