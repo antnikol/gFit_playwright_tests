@@ -222,6 +222,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-              "text": "Playwright Tests: *'${STATUS}'*\nRepository: 'antnikol/gFit_playwright_tests'\nBranch: '${{ github.ref_name }}'\nDuration: '${DURATION_FORMATTED}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: '${JOB_URL}'",
+              "text": "Playwright Tests: *'${STATUS}'*\nRepository: 'antnikol/gFit_playwright_tests'\nBranch: '${{ github.ref_name }}'\nStart time: '${START_TIME}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: '${JOB_URL}'",
               "parse_mode": "Markdown"
             }'
