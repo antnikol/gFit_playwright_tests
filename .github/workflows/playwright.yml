@@ -43,6 +43,9 @@ jobs:
             exit 1
           fi
 
+      - name: Install xmllint
+        run: sudo apt-get install -y libxml2-utils
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
@@ -166,26 +169,32 @@ jobs:
             #   "https://eu.xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=DEV&testExecutionKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-87&revision=v1.0.0" \
             #   -v
 
-          # HTTP_CODE=$(tail -n 1 response.log)
+          RESPONSE=$(curl -s -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
+            -H "Content-Type: text/xml" \
+            --data @"playwright-report/test-results.xml" \
+            "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-129")
 
-          # if [ "$HTTP_CODE" -ne 200 ]; then
-          #   ERROR_MESSAGE=$(cat response.log)
-          #   echo "Error: Failed to upload test results to Xray. HTTP Status: $HTTP_CODE"
-          #   echo "Response: $ERROR_MESSAGE"
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+          ERROR_MESSAGE=$(echo "$RESPONSE" | head -n -1)
 
-          #   # Send error message to Telegram
-          #   curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-          #     -H "Content-Type: application/json" \
-          #     -d '{
-          #       "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-          #       "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-          #       "parse_mode": "Markdown"
-          #     }'
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "Error: Failed to upload test results to Xray. HTTP Status: $HTTP_CODE"
+            echo "Response: $ERROR_MESSAGE"
 
-          #   exit 1
-          # else
-          #   echo "Test results uploaded successfully to Xray."
-          # fi
+            # Send error message to Telegram
+            curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+                "text": "Error uploading test results to Xray. HTTP Status: '${HTTP_CODE}'\nDetails: '${ERROR_MESSAGE}'\nJob URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                "parse_mode": "Markdown"
+              }'
+
+            exit 1
+          else
+            echo "Test results uploaded successfully to Xray."
+          fi
 
       - name: Debug GitHub context
         run: |
