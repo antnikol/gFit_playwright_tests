@@ -132,7 +132,7 @@ jobs:
             -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
             -H "Content-Type: text/xml" \
             --data @"playwright-report/test-results.xml" \
-            "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}"
+            "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=DEV&testExecKey=${TEST_EXECUTION_KEY}&testPlanKey=DEV-129"
 
             # -H "Authorization: Bearer ${{ env.XRAY_TOKEN }}" \
             # -H "Content-Type: multipart/form-data" \
@@ -161,6 +161,9 @@ jobs:
         if: always()
         run: |
           START_TIME="${{ github.event.workflow_run.head_commit.timestamp }}"
+          if [ -z "$START_TIME" ]; then
+            START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # поточний час у форматі ISO 8601
+          fi
           END_TIME=$(date -u +"%s")
           START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
           DURATION=$((END_TIME - START_TIME_SECONDS))
