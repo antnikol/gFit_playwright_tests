@@ -10,6 +10,9 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
+      - name: Set START_TIME
+        run: echo "START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -28,11 +31,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Get start time for the tests process
-          START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          echo "START_TIME=$START_TIME" >> $GITHUB_ENV
-          echo "START_TIME: $START_TIME"
-
           npm ci
           if [ $? -ne 0 ]; then
             echo "Error: Failed to install dependencies."
@@ -199,9 +197,13 @@ jobs:
       - name: Send report to Telegram
         if: always()
         run: |
-          echo "START_TIME: ${{ env.START_TIME }}"
+          echo "START_TIME: $START_TIME"
           END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          echo "END_TIME: $END_TIME"
+          START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
+          END_TIME_SECONDS=$(date -d "$END_TIME" +%s)
+          DURATION=$((END_TIME_SECONDS - START_TIME_SECONDS))
+          DURATION_FORMATTED=$(printf "%02d:%02d:%02d" $((DURATION / 3600)) $(((DURATION % 3600) / 60)) $((DURATION % 60)))
+          echo "Duration: $DURATION_FORMATTED"
 
           STATUS="success"
 
@@ -217,6 +219,8 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-              "text": "Playwright Tests: *'${STATUS}'*\nRepository: antnikol\/gFit_playwright_tests\nBranch: '${{ github.ref_name }}'\nStart time: '${{ env.START_TIME }}'\nEnd time: '${END_TIME}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: '${JOB_URL}'",
+              "text": "Playwright Tests: *'${STATUS}'*\nRepository: antnikol/gFit\\_playwright\\_tests\nBranch: '${{ github.ref_name }}'\nStart time: '${{ env.START_TIME }}'\nEnd time: '${END_TIME}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: https://github.com/antnikol/gFit\\_playwright\\_tests/actions/runs/'${{ github.run_id }}'",
               "parse_mode": "Markdown"
             }'
+        env:
+          START_TIME: ${{ env.START_TIME }}
