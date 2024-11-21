@@ -30,14 +30,8 @@ jobs:
         run: |
           # Get start time for the tests process
           START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "START_TIME=$START_TIME" >> $GITHUB_ENV
           echo "START_TIME: $START_TIME"
-          # START_TIME="${{ github.run_started_at }}"
-          # if [ -z "$START_TIME" ]; then
-          #   START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # If empty - use current time
-          #   echo "START_TIME was empty, using current time: $START_TIME"
-          # else
-          #   echo "START_TIME: $START_TIME"
-          # fi
 
           npm ci
           if [ $? -ne 0 ]; then
@@ -205,15 +199,9 @@ jobs:
       - name: Send report to Telegram
         if: always()
         run: |
-          echo "START_TIME: $START_TIME"
+          echo "START_TIME: ${{ env.START_TIME }}"
           END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          # END_TIME=$(date -u +"%s")
           echo "END_TIME: $END_TIME"
-          echo "START_TIME: $START_TIME"
-          # START_TIME_SECONDS=$(date -d "$START_TIME" +%s)
-          # echo "START_TIME: $START_TIME_SECONDS"
-          # DURATION=$((END_TIME - START_TIME_SECONDS))
-          # DURATION_FORMATTED=$(date -u -d @${DURATION} +"%H:%M:%S")
 
           STATUS="success"
 
@@ -229,6 +217,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-              "text": "Playwright Tests: *'${STATUS}'*\nRepository: antnikol\/gFit_playwright_tests\nBranch: '${{ github.ref_name }}'\nStart time: '${START_TIME}'\nEnd time: '${END_TIME}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: '${JOB_URL}'",
+              "text": "Playwright Tests: *'${STATUS}'*\nRepository: antnikol\/gFit_playwright_tests\nBranch: '${{ github.ref_name }}'\nStart time: '${{ env.START_TIME }}'\nEnd time: '${END_TIME}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: '${JOB_URL}'",
               "parse_mode": "Markdown"
             }'
