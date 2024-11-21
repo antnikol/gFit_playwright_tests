@@ -30,6 +30,7 @@ jobs:
         run: |
           # Get start time for the tests process
           START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "START_TIME: $START_TIME"
           # START_TIME="${{ github.run_started_at }}"
           # if [ -z "$START_TIME" ]; then
           #   START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")  # If empty - use current time
