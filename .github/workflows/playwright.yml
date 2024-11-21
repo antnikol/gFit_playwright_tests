@@ -135,6 +135,7 @@ jobs:
                   }' \
               "https://gfitn.atlassian.net/rest/api/2/issue")
               
+            
             TEST_EXECUTION_KEY=$(echo "$RESPONSE" | jq -r '.key')
             
             if [[ "$TEST_EXECUTION_KEY" == "null" || -z "$TEST_EXECUTION_KEY" ]]; then
@@ -154,17 +155,7 @@ jobs:
           # Release the lock after writing
           exec 200>&-
           # Use the TEST_EXECUTION_KEY for further steps
-          echo "Using Test Execution Key: $TEST_EXECUTION_KEY
-
-      - name: Debug git remote configuration
-        run: |
-          git remote -v
-          git config --list
-
-      # - name: Pull latest changes
-      #   run: |
-      #     git fetch origin
-      #     git reset --hard origin/${GITHUB_REF##*/}
+          echo "Using Test Execution Key: $TEST_EXECUTION_KEY"
 
       - name: Commit and push changes to registry file
         run: |
@@ -224,18 +215,4 @@ jobs:
 
           PASSED=$(xmllint --xpath "string(//testsuite/@tests)" playwright-report/test-results.xml)
           FAILED=$(xmllint --xpath "string(//testsuite/@failures)" playwright-report/test-results.xml)
-          echo "PASSED=$PASSED" >> $GITHUB_ENV
-          echo "FAILED=$FAILED" >> $GITHUB_ENV
-
-          JOB_URL="https://github.com/antnikol/gFit\_playwright\_tests/actions/runs/${{ github.run_id }}"
-          TOTAL=$(xmllint --xpath "string(//testsuite/@tests)" playwright-report/test-results.xml)
-
-          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-              "text": "Playwright Tests: *'${STATUS}'*\nRepository: antnikol/gFit\\_playwright\\_tests\nBranch: '${{ github.ref_name }}'\nTest duration: '${DURATION_FORMATTED}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: https://github.com/antnikol/gFit\\_playwright\\_tests/actions/runs/'${{ github.run_id }}'",
-              "parse_mode": "Markdown"
-            }'
-        env:
-          START_TIME: ${{ env.START_TIME }}
+          echo "PASSED
