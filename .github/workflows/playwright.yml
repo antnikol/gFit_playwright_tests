@@ -37,7 +37,9 @@ jobs:
       - name: Cache Node.js modules
         uses: actions/cache@v3
         with:
-          path: ~/.npm
+          path: |
+            ~/.npm
+            node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
@@ -47,6 +49,7 @@ jobs:
           npm ci
           sudo apt-get install -y 
           npm install -g allure-commandline
+          npm install --save-dev allure-commandline allure-playwright
 
       - name: Install xmllint
         run: sudo apt-get install -y libxml2-utils
