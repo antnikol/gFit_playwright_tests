@@ -23,7 +23,11 @@ module.exports = defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html', { outputFolder: 'playwright-report', open: 'never' }], // HTML репортер
-    ['junit', { outputFile: 'playwright-report/test-results.xml' }]  // XML репортер
+    ['junit', { outputFile: 'playwright-report/test-results.xml' }],  // XML репортер
+    ['list'],
+    ['allure-playwright'],
+    ['dot'],
+
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
