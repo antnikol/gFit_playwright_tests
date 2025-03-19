@@ -124,15 +124,15 @@ jobs:
         run: |
           sed -i 's|https://antnikol.github.io/gFit_playwright_tests|https://antnikol.github.io/gF1t-AllureReport|g' allure-history/index.html
 
-      # - name: Publish Allure report
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   if: always()
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_branch: gh-pages
-      #     publish_dir: allure-history
-      #
-      - name: Deploy to GitHub Pages in AirDodge_tests repo
+      - name: Publish Allure report
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+
+      - name: Deploy to GitHub Pages in gFit_playwright_tests repo
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           repository-name: antnikol/gFit_playwright_tests
@@ -140,7 +140,7 @@ jobs:
           branch: gh-pages
           folder: allure-history
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages F1t-AllureReport
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           repository-name: antnikol/gF1t-AllureReport
