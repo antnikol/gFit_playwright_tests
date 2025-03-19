@@ -97,6 +97,13 @@ jobs:
       #     name: allure-results
       #     path: ./allure-results
 
+      - name: Run Playwright tests
+        if: always()
+        continue-on-error: true
+        run: npx playwright test --reporter=allure-playwright
+        env:
+          CI: true
+
       - name: Load test report history
         uses: actions/checkout@v4
         if: always()
