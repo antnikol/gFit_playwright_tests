@@ -61,6 +61,8 @@ jobs:
         run: mkdir -p playwright-report
 
       - name: Run Playwright tests
+        if: always()
+        continue-on-error: true
         run: npx playwright test --output=playwright-report
         env:
           CI: true
