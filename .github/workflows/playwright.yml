@@ -80,22 +80,66 @@ jobs:
             echo "Test results file verified: playwright-report/test-results.xml"
           fi
 
-      - name: Generate Allure report
-        run: |
-          allure generate ./allure-results --clean
+      # - name: Generate Allure report
+      #   run: |
+      #     allure generate ./allure-results --clean
 
-      - name: Upload Allure report
-        uses: actions/upload-artifact@v4
+      # - name: Upload Allure report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: allure-report
+      #     path: ./allure-report
+
+      # - name: Publish Allure results
+      #   uses: actions/upload-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: allure-results
+      #     path: ./allure-results
+
+      - name: Load test report history
+        uses: actions/checkout@v4
+        if: always()
+        continue-on-error: true
         with:
-          name: allure-report
-          path: ./allure-report
+          ref: gh-pages
+          path: allure-history
 
-      - name: Publish Allure results
-        uses: actions/upload-artifact@v4
+      - name: Build Allure report
+        uses: simple-elf/allure-report-action@v1.7
         if: always()
         with:
-          name: allure-results
-          path: ./allure-results
+          gh_pages: allure-history
+          allure_results: allure-results
+          allure_history: allure-history
+
+      - name: Replace incorrect link in index.html
+        run: |
+          sed -i 's|https://antnikol.github.io/gFit_playwright_tests|https://antnikol.github.io/gF1t-AllureReport|g' allure-history/index.html
+
+      # - name: Publish Allure report
+      #   uses: peaceiris/actions-gh-pages@v3
+      #   if: always()
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_branch: gh-pages
+      #     publish_dir: allure-history
+      #
+      - name: Deploy to GitHub Pages in AirDodge_tests repo
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          repository-name: antnikol/gFit_playwright_tests
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          branch: gh-pages
+          folder: allure-history
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          repository-name: antnikol/gF1t-AllureReport
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          branch: gh-pages
+          folder: allure-history
 
       - name: Configure GitHub token for authentication
         env:
