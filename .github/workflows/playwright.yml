@@ -299,7 +299,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
-              "text": "Playwright Tests: *'${STATUS}'*\nRepository: antnikol/gFit\\_playwright\\_tests\nBranch: '${{ github.ref_name }}'\nTest duration: '${DURATION_FORMATTED}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: https://github.com/antnikol/gFit\\_playwright\\_tests/actions/runs/'${{ github.run_id }}'\nAllure report: https://antnikol.github.io/gFit\\_playwright\\_tests/",
+              "text": "Playwright Tests: *'${STATUS}'*\nRepository: antnikol/gF1t\\_playwright\\_tests\nBranch: '${{ github.ref_name }}'\nTest duration: '${DURATION_FORMATTED}'\nTests: '${TOTAL}'\nPassed: '${PASSED}'\nFailed: '${FAILED}'\nJob URL: https://github.com/antnikol/gFit\\_playwright\\_tests/actions/runs/'${{ github.run_id }}'\nAllure report: https://antnikol.github.io/gF1t-AllureReport/",
               "parse_mode": "Markdown"
             }'
         env:
