@@ -97,57 +97,6 @@ jobs:
       #     name: allure-results
       #     path: ./allure-results
 
-      - name: Run Playwright tests
-        if: always()
-        continue-on-error: true
-        run: npx playwright test --reporter=allure-playwright
-        env:
-          CI: true
-
-      - name: Load test report history
-        uses: actions/checkout@v4
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: allure-history
-
-      - name: Build Allure report
-        uses: simple-elf/allure-report-action@v1.7
-        if: always()
-        with:
-          gh_pages: allure-history
-          allure_results: allure-results
-          allure_history: allure-history
-
-      - name: Replace incorrect link in index.html
-        run: |
-          sed -i 's|https://antnikol.github.io/gFit_playwright_tests|https://antnikol.github.io/gF1t-AllureReport|g' allure-history/index.html
-
-      - name: Publish Allure report
-        uses: peaceiris/actions-gh-pages@v3
-        if: always()
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-history
-
-      - name: Deploy to GitHub Pages in gFit_playwright_tests repo
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          repository-name: antnikol/gFit_playwright_tests
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          branch: gh-pages
-          folder: allure-history
-
-      - name: Deploy to GitHub Pages F1t-AllureReport
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          repository-name: antnikol/gF1t-AllureReport
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          branch: gh-pages
-          folder: allure-history
-
       - name: Configure GitHub token for authentication
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -273,6 +222,57 @@ jobs:
             git commit -m "Update test execution registry"
             git push https://github.com/antnikol/gFit_playwright_tests "$GITHUB_REF"
           }
+
+      - name: Run Playwright tests
+        if: always()
+        continue-on-error: true
+        run: npx playwright test --reporter=allure-playwright
+        env:
+          CI: true
+
+      - name: Load test report history
+        uses: actions/checkout@v4
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: allure-history
+
+      - name: Build Allure report
+        uses: simple-elf/allure-report-action@v1.7
+        if: always()
+        with:
+          gh_pages: allure-history
+          allure_results: allure-results
+          allure_history: allure-history
+
+      - name: Replace incorrect link in index.html
+        run: |
+          sed -i 's|https://antnikol.github.io/gFit_playwright_tests|https://antnikol.github.io/gF1t-AllureReport|g' allure-history/index.html
+
+      - name: Publish Allure report
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+
+      - name: Deploy to GitHub Pages in gFit_playwright_tests repo
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          repository-name: antnikol/gFit_playwright_tests
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          branch: gh-pages
+          folder: allure-history
+
+      - name: Deploy to GitHub Pages F1t-AllureReport
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          repository-name: antnikol/gF1t-AllureReport
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          branch: gh-pages
+          folder: allure-history
 
       - name: Send report to Telegram
         if: always()
