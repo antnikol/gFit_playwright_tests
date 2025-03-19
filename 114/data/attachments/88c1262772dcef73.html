@@ -1,0 +1,178 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: Test#1 | has title
+- Location: /home/runner/work/gFit_playwright_tests/gFit_playwright_tests/tests/example.spec.js:4:5
+
+# Error details
+
+```
+Error: Timed out 5000ms waiting for expect(locator).toHaveTitle(expected)
+
+Locator: locator(':root')
+Expected pattern: /Playwright1111111111111111111111/
+Received string:  "Fast and reliable end-to-end testing for modern web apps | Playwright"
+Call log:
+  - expect.toHaveTitle with timeout 5000ms
+  - waiting for locator(':root')
+    2 × locator resolved to <html lang="en" dir="ltr" data-theme="light" data-has-hydrated="" class="plugin-pages plugin-id-default" data-rh="lang,dir,class,data-has-hydrated">…</html>
+      - unexpected value "Fast and reliable end-to-end testing for modern web apps | Playwright"
+    7 × locator resolved to <html lang="en" dir="ltr" data-theme="light" data-has-hydrated="true" class="plugin-pages plugin-id-default" data-rh="lang,dir,class,data-has-hydrated">…</html>
+      - unexpected value "Fast and reliable end-to-end testing for modern web apps | Playwright"
+
+    at /home/runner/work/gFit_playwright_tests/gFit_playwright_tests/tests/example.spec.js:8:22
+```
+
+# Page snapshot
+
+```yaml
+- region "Skip to main content":
+  - link "Skip to main content"
+- navigation "Main":
+  - button "Toggle navigation bar"
+  - link "Playwright logo Playwright":
+    - img "Playwright logo"
+    - text: Playwright
+  - button "Search (Ctrl+K)"
+- banner:
+  - heading "Playwright enables reliable end-to-end testing for modern web apps." [level=1]
+  - link "Get started"
+  - link "Star microsoft/playwright on GitHub": Star
+  - link "70k+ stargazers on GitHub": 70k+
+- main:
+  - img "Browsers (Chromium, Firefox, WebKit)"
+  - heading "Any browser • Any platform • One API" [level=3]
+  - paragraph: Cross-browser. Playwright supports all modern rendering engines including Chromium, WebKit, and Firefox.
+  - paragraph: Cross-platform. Test on Windows, Linux, and macOS, locally or on CI, headless or headed.
+  - paragraph:
+    - text: Cross-language. Use the Playwright API in
+    - link "TypeScript"
+    - text: ","
+    - link "JavaScript"
+    - text: ","
+    - link "Python"
+    - text: ","
+    - link ".NET"
+    - text: ","
+    - link "Java"
+    - text: .
+  - paragraph: Test Mobile Web. Native mobile emulation of Google Chrome for Android and Mobile Safari. The same rendering engine works on your Desktop and in the Cloud.
+  - heading [level=3]
+  - heading [level=3]
+  - heading "Resilient • No flaky tests" [level=3]
+  - paragraph: Auto-wait. Playwright waits for elements to be actionable prior to performing actions. It also has a rich set of introspection events. The combination of the two eliminates the need for artificial timeouts - the primary cause of flaky tests.
+  - paragraph: Web-first assertions. Playwright assertions are created specifically for the dynamic web. Checks are automatically retried until the necessary conditions are met.
+  - paragraph: Tracing. Configure test retry strategy, capture execution trace, videos, screenshots to eliminate flakes.
+  - heading "No trade-offs • No limits" [level=3]
+  - paragraph: Browsers run web content belonging to different origins in different processes. Playwright is aligned with the modern browsers architecture and runs tests out-of-process. This makes Playwright free of the typical in-process test runner limitations.
+  - paragraph: Multiple everything. Test scenarios that span multiple tabs, multiple origins and multiple users. Create scenarios with different contexts for different users and run them against your server, all in one test.
+  - paragraph: Trusted events. Hover elements, interact with dynamic controls, produce trusted events. Playwright uses real browser input pipeline indistinguishable from the real user.
+  - paragraph: Test frames, pierce Shadow DOM. Playwright selectors pierce shadow DOM and allow entering frames seamlessly.
+  - heading [level=3]
+  - heading [level=3]
+  - heading "Full isolation • Fast execution" [level=3]
+  - paragraph: Browser contexts. Playwright creates a browser context for each test. Browser context is equivalent to a brand new browser profile. This delivers full test isolation with zero overhead. Creating a new browser context only takes a handful of milliseconds.
+  - paragraph: Log in once. Save the authentication state of the context and reuse it in all the tests. This bypasses repetitive log-in operations in each test, yet delivers full isolation of independent tests.
+  - heading "Powerful Tooling" [level=3]
+  - paragraph:
+    - link "Codegen."
+    - text: Generate tests by recording your actions. Save them into any language.
+  - paragraph:
+    - link "Playwright inspector."
+    - text: Inspect page, generate selectors, step through the test execution, see click points, explore execution logs.
+  - paragraph:
+    - link "Trace Viewer."
+    - text: Capture all the information to investigate the test failure. Playwright trace contains test execution screencast, live DOM snapshots, action explorer, test source, and many more.
+  - heading "Chosen by companies and open source projects" [level=2]
+  - list:
+    - listitem:
+      - link "VS Code":
+        - img "VS Code"
+    - listitem:
+      - link "Bing":
+        - img "Bing"
+    - listitem:
+      - link "Outlook":
+        - img "Outlook"
+    - listitem:
+      - link "Disney+ Hotstar":
+        - img "Disney+ Hotstar"
+    - listitem:
+      - link "Material UI":
+        - img "Material UI"
+    - listitem:
+      - link "ING":
+        - img "ING"
+    - listitem:
+      - link "Adobe":
+        - img "Adobe"
+    - listitem:
+      - link "React Navigation":
+        - img "React Navigation"
+    - listitem:
+      - link "Accessibility Insights":
+        - img "Accessibility Insights"
+- contentinfo:
+  - text: Learn
+  - list:
+    - listitem:
+      - link "Getting started"
+    - listitem:
+      - link "Playwright Training"
+    - listitem:
+      - link "Learn Videos"
+    - listitem:
+      - link "Feature Videos"
+  - text: Community
+  - list:
+    - listitem:
+      - link "Stack Overflow"
+    - listitem:
+      - link "Discord"
+    - listitem:
+      - link "Twitter"
+    - listitem:
+      - link "LinkedIn"
+  - text: More
+  - list:
+    - listitem:
+      - link "GitHub"
+    - listitem:
+      - link "YouTube"
+    - listitem:
+      - link "Blog"
+    - listitem:
+      - link "Ambassadors"
+  - text: Copyright © 2025 Microsoft
+```
+
+# Test source
+
+```ts
+   1 | // @ts-check
+   2 | import { test, expect } from '@playwright/test';
+   3 |
+   4 | test('Test#1 | has title', async ({ page }) => {
+   5 |   await page.goto('https://playwright.dev/');
+   6 |
+   7 |   // Expect a title "to contain" a substring.
+>  8 |   await expect(page).toHaveTitle(/Playwright1111111111111111111111/);
+     |                      ^ Error: Timed out 5000ms waiting for expect(locator).toHaveTitle(expected)
+   9 | });
+  10 |
+  11 | test('Test#2 | get started link', async ({ page }) => {
+  12 |   await page.goto('https://playwright.dev/');
+  13 |
+  14 |   // Click the get started link.
+  15 |   await page.getByRole('link', { name: 'Get started' }).click();
+  16 |
+  17 |   // Expects page to have a heading with the name of Installation.
+  18 |   await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+  19 | });
+  20 |
+```
